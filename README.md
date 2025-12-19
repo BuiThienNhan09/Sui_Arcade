@@ -1,6 +1,6 @@
 # SuiArcade - Web3 Game Launcher
 
-A pixel-art styled Web3 Game Launcher built on the Sui Network with real SUI payouts.
+SuiArcade là nền tảng game phi tập trung được xây dựng trên Sui blockchain, bao gồm các trò chơi kinh điển như Rương may mắn, Cờ Caro (XO), và Lô Tô. Trải nghiệm gaming công bằng minh bạch với giao dịch tức thì, sở hữu thật sự tài sản trong game, và phần thưởng on-chain rõ ràng. Chơi game yêu thích của bạn và kiếm giá trị thực trong kỷ nguyên Web3.
 
 ## 🎮 Games Available
 
