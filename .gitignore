@@ -47,3 +47,6 @@ next-env.d.ts
 # Sui Move
 contracts/build/
 Move.lock
+
+# Old game code reference
+Old_game_code/
