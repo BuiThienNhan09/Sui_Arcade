@@ -50,3 +50,6 @@ Move.lock
 
 # Old game code reference
 Old_game_code/
+
+# Deployment info (contains sensitive IDs)
+TESTNET.md

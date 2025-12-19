@@ -2,11 +2,13 @@
 
 import { ConnectButton, useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
 import { useEffect, useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 
 export default function WalletButtons() {
     const account = useCurrentAccount();
     const suiClient = useSuiClient();
     const [balance, setBalance] = useState<string | null>(null);
+    const [isExpanded, setIsExpanded] = useState(false);
 
     useEffect(() => {
         const fetchBalance = async () => {
@@ -18,7 +20,6 @@ export default function WalletButtons() {
                 const balanceResult = await suiClient.getBalance({
                     owner: account.address,
                 });
-                // Convert from MIST to SUI (1 SUI = 1,000,000,000 MIST)
                 const suiBalance = Number(balanceResult.totalBalance) / 1_000_000_000;
                 setBalance(suiBalance.toFixed(2));
             } catch (e) {
@@ -28,7 +29,6 @@ export default function WalletButtons() {
         };
 
         fetchBalance();
-        // Refresh balance every 10 seconds
         const interval = setInterval(fetchBalance, 10000);
         return () => clearInterval(interval);
     }, [account, suiClient]);
@@ -61,29 +61,59 @@ export default function WalletButtons() {
         }
       `}</style>
 
-            {/* Order: Top Up | Balance | Connect Wallet */}
+            {/* Desktop: Show all buttons */}
+            {/* Mobile: Collapsed menu */}
 
-            {/* Top Up Button (shown when connected) */}
             {account && (
-                <button
-                    onClick={handleTopUp}
-                    className="bg-white text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-2 px-6 hover:-translate-y-[2px] active:translate-y-0 active:shadow-none transition-all text-sm whitespace-nowrap"
-                >
-                    TOP UP
-                </button>
+                <>
+                    {/* Mobile: Collapsed dropdown toggle */}
+                    <div className="md:hidden relative">
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className="bg-white text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-2 px-4 flex items-center gap-1"
+                        >
+                            <span className="text-sm">{balance} SUI</span>
+                            <ChevronDown size={16} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {/* Dropdown menu */}
+                        {isExpanded && (
+                            <div className="absolute top-full right-0 mt-2 flex flex-col gap-2 z-50">
+                                <button
+                                    onClick={() => { handleTopUp(); setIsExpanded(false); }}
+                                    className="bg-white text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-2 px-6 text-sm whitespace-nowrap"
+                                >
+                                    TOP UP
+                                </button>
+                                <div data-testid="connect-wallet-button">
+                                    <ConnectButton />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Desktop: Full buttons */}
+                    <button
+                        onClick={handleTopUp}
+                        className="hidden md:block bg-white text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-2 px-6 hover:-translate-y-[2px] active:translate-y-0 active:shadow-none transition-all text-sm whitespace-nowrap"
+                    >
+                        TOP UP
+                    </button>
+                    <div className="hidden md:block bg-white text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-2 px-4 text-sm whitespace-nowrap">
+                        {balance} SUI
+                    </div>
+                    <div className="hidden md:block" data-testid="connect-wallet-button">
+                        <ConnectButton />
+                    </div>
+                </>
             )}
 
-            {/* Balance Display (shown when connected) */}
-            {account && balance !== null && (
-                <div className="bg-white text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-2 px-4 text-sm whitespace-nowrap">
-                    {balance} SUI
+            {/* Not connected: Just show connect button */}
+            {!account && (
+                <div data-testid="connect-wallet-button">
+                    <ConnectButton />
                 </div>
             )}
-
-            {/* Connect Wallet Button */}
-            <div data-testid="connect-wallet-button">
-                <ConnectButton />
-            </div>
         </div>
     );
 }

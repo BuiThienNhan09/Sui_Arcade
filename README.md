@@ -1,38 +1,44 @@
 # SuiArcade - Web3 Game Launcher
 
-A scalable, Web3-enabled Game Launcher built on the Sui Network.
+A pixel-art styled Web3 Game Launcher built on the Sui Network with real SUI payouts.
 
-## Overview
+## 🎮 Games Available
 
-SuiArcade is a "Plug-and-Play" architecture where the website acts as a shell (Launcher) handling authentication, routing, and styling, while individual games can be developed as isolated modules and plugged in later.
+| Game | Route | Entry | Mechanic |
+|------|-------|-------|----------|
+| **XO Game** | `/games/xo` | 0.1-1 SUI | Beat AI to win 2x |
+| **Loto/Bingo** | `/games/loto` | 0.1-5 SUI | Complete lines for 5x per line |
+| **Lucky Chests** | `/games/lucky-chests` | 0.1-1 SUI | Random chance rewards |
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16 (React) with App Router
-- **Styling**: Tailwind CSS
-- **Blockchain**: Sui Network
+- **Frontend**: Next.js 16 (App Router)
+- **Styling**: Tailwind CSS + Pixel Art Theme
+- **Blockchain**: Sui Network (Testnet)
 - **SDKs**: `@mysten/dapp-kit`, `@mysten/sui`
-- **State**: Zustand
+- **Animation**: Framer Motion
 - **Smart Contracts**: Sui Move
 
 ## Project Structure
 
 ```
-sui-mini-games/
+SuiArcane/
 ├── contracts/              # Move smart contracts
-│   ├── sources/
-│   │   └── house.move      # House treasury module
-│   └── tests/
-│       └── house_tests.move
+│   └── sources/
+│       ├── house.move      # House treasury
+│       ├── xo_game.move    # XO game logic
+│       ├── loto_game.move  # Loto/Bingo game
+│       └── gacha.move      # Lucky Chests
 ├── src/
-│   ├── app/                # Next.js App Router
+│   ├── app/
+│   │   └── games/          # Game pages
+│   │       ├── xo/
+│   │       ├── loto/
+│   │       └── lucky-chests/
 │   ├── components/         # UI Components
-│   ├── config/
-│   │   └── games.ts        # Game Registry
-│   ├── hooks/              # Custom Web3 hooks
-│   └── lib/
-│       └── sui.ts          # Sui client utilities
-└── public/assets/          # Static assets
+│   ├── hooks/              # Blockchain hooks
+│   └── lib/                # Game logic & contracts
+└── public/                 # Static assets
 ```
 
 ## Getting Started
@@ -41,12 +47,11 @@ sui-mini-games/
 
 - Node.js 18+
 - npm 9+
-- Sui CLI 1.x
+- Sui CLI 1.x (optional, for contract deployment)
 
 ### Installation
 
 ```bash
-cd sui-mini-games
 npm install
 ```
 
@@ -54,6 +59,7 @@ npm install
 
 ```bash
 npm run dev
+# Open http://localhost:3000
 ```
 
 ### Build
@@ -64,39 +70,25 @@ npm run build
 
 ## Smart Contracts
 
-### Build Contracts
+### Build & Deploy
 
 ```bash
 cd contracts
 sui move build
-```
-
-### Run Tests
-
-```bash
-sui move test
-```
-
-### Deploy to Testnet
-
-```bash
 sui client publish --gas-budget 100000000
 ```
 
-## Game Registry
+### Fund Game Pools
 
-Add new games by updating `src/config/games.ts`:
+```bash
+# Fund XO GamePool
+sui client call --package <PACKAGE_ID> --module xo_game --function fund_pool --args <POOL_ID> <COIN_ID> --gas-budget 10000000
 
-```typescript
-{
-  id: 'my-game',
-  title: 'My Game',
-  description: 'Description here',
-  imageUrl: '/assets/my-game-thumb.png',
-  status: 'live',
-  docsUrl: '#',
-  repoUrl: '#',
-}
+# Fund Loto Pool
+sui client call --package <PACKAGE_ID> --module loto_game --function fund_pool --args <POOL_ID> <COIN_ID> --gas-budget 10000000
+
+# Fund Gacha Treasury
+sui client call --package <PACKAGE_ID> --module gacha --function fund_treasury --args <TREASURY_ID> <COIN_ID> --gas-budget 10000000
 ```
 
 ## License
