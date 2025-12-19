@@ -5,18 +5,21 @@ import { useRouter } from 'next/navigation';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import XOGame from '@/components/games/XOGame';
 import { GAME_CONFIGS, GameResult } from '@/lib/xoLogic';
+import { useXOGame } from '@/hooks/useXOGame';
 
-type GameState = 'select' | 'playing';
+type GameState = 'select' | 'paying' | 'playing';
 
 // Forfeit confirmation modal
 function ForfeitModal({
     onConfirm,
     onCancel,
-    entryCost
+    entryCost,
+    isLoading
 }: {
     onConfirm: () => void;
     onCancel: () => void;
     entryCost: number;
+    isLoading: boolean;
 }) {
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
@@ -35,16 +38,18 @@ function ForfeitModal({
                 <div className="flex flex-col gap-4">
                     <button
                         onClick={onCancel}
-                        className="bg-green-400 text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-3 px-8 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all text-lg"
+                        disabled={isLoading}
+                        className="bg-green-400 text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-3 px-8 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all text-lg disabled:opacity-50"
                     >
                         CONTINUE PLAYING
                     </button>
 
                     <button
                         onClick={onConfirm}
-                        className="bg-red-400 text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-3 px-8 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all text-lg"
+                        disabled={isLoading}
+                        className="bg-red-400 text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-3 px-8 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all text-lg disabled:opacity-50"
                     >
-                        FORFEIT & LEAVE
+                        {isLoading ? 'PROCESSING...' : 'FORFEIT & LEAVE'}
                     </button>
                 </div>
             </div>
@@ -55,30 +60,52 @@ function ForfeitModal({
 export default function XOGamePage() {
     const router = useRouter();
     const account = useCurrentAccount();
+    const { startGame, claimResult, forfeitGame, isLoading, error } = useXOGame();
+
     const [gameState, setGameState] = useState<GameState>('select');
     const [selectedSize, setSelectedSize] = useState<number | null>(null);
     const [showForfeitModal, setShowForfeitModal] = useState(false);
 
-    const handleSelectSize = (size: number) => {
+    const handleSelectSize = async (size: number) => {
         if (!account) {
             alert('Please connect your wallet first!');
             return;
         }
+
         setSelectedSize(size);
-        setGameState('playing');
+        setGameState('paying');
+
+        // Start game on blockchain
+        const success = await startGame(size);
+
+        if (success) {
+            setGameState('playing');
+        } else {
+            setGameState('select');
+            setSelectedSize(null);
+            if (error) {
+                alert(`Failed to start game: ${error}`);
+            }
+        }
     };
 
-    const handleGameEnd = (result: GameResult) => {
+    const handleGameEnd = async (result: GameResult) => {
         console.log('Game ended with result:', result);
-        // TODO: Call contract to claim payout
+        // Claim result will be called from ResultModal
+    };
+
+    const handleClaimAndGoBack = async (result: GameResult) => {
+        await claimResult(result);
+        setGameState('select');
+        setSelectedSize(null);
     };
 
     const handleBackClick = () => {
-        // Show forfeit confirmation when trying to leave during a game
         setShowForfeitModal(true);
     };
 
-    const handleConfirmForfeit = () => {
+    const handleConfirmForfeit = async () => {
+        await forfeitGame();
         setShowForfeitModal(false);
         setGameState('select');
         setSelectedSize(null);
@@ -88,15 +115,22 @@ export default function XOGamePage() {
         setShowForfeitModal(false);
     };
 
-    const handleGoBack = () => {
-        // This is called from ResultModal after game ends (no forfeit needed)
-        setGameState('select');
-        setSelectedSize(null);
-    };
-
     const handleReturnHome = () => {
         router.push('/?section=1');
     };
+
+    // Loading screen while paying entry fee
+    if (gameState === 'paying') {
+        return (
+            <div className="min-h-screen bg-[#5CA6FC] flex flex-col items-center justify-center p-4">
+                <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] p-8 rounded-xl text-center">
+                    <div className="animate-spin w-12 h-12 border-4 border-black border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <h2 className="text-xl font-bold text-black mb-2">PAYING ENTRY FEE</h2>
+                    <p className="text-gray-600 text-sm">Please confirm in your wallet...</p>
+                </div>
+            </div>
+        );
+    }
 
     // Size selection screen
     if (gameState === 'select') {
@@ -137,12 +171,12 @@ export default function XOGamePage() {
                             <button
                                 key={size}
                                 onClick={() => handleSelectSize(size)}
-                                disabled={!account}
+                                disabled={!account || isLoading}
                                 className={`
                   bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]
                   rounded-2xl p-6 w-64
                   transition-all
-                  ${account ? 'hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] cursor-pointer' : 'opacity-50 cursor-not-allowed'}
+                  ${account && !isLoading ? 'hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] cursor-pointer' : 'opacity-50 cursor-not-allowed'}
                 `}
                             >
                                 <h2 className="text-3xl font-bold text-black mb-4">
@@ -216,7 +250,7 @@ export default function XOGamePage() {
                 <XOGame
                     config={config}
                     onGameEnd={handleGameEnd}
-                    onGoBack={handleGoBack}
+                    onGoBack={(result) => handleClaimAndGoBack(result || 'lose')}
                 />
 
                 {/* Forfeit Confirmation Modal */}
@@ -225,6 +259,7 @@ export default function XOGamePage() {
                         entryCost={config.entryCost}
                         onConfirm={handleConfirmForfeit}
                         onCancel={handleCancelForfeit}
+                        isLoading={isLoading}
                     />
                 )}
             </div>

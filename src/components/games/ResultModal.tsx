@@ -7,9 +7,10 @@ interface ResultModalProps {
     payout: number;
     onPlayAgain: () => void;
     onGoBack: () => void;
+    isClaiming?: boolean;
 }
 
-export default function ResultModal({ result, payout, onPlayAgain, onGoBack }: ResultModalProps) {
+export default function ResultModal({ result, payout, onPlayAgain, onGoBack, isClaiming = false }: ResultModalProps) {
     const resultConfig = {
         win: {
             title: 'YOU WIN!',
@@ -54,16 +55,18 @@ export default function ResultModal({ result, payout, onPlayAgain, onGoBack }: R
                 <div className="flex flex-col gap-4">
                     <button
                         onClick={onPlayAgain}
-                        className="bg-green-400 text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-3 px-8 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all text-lg"
+                        disabled={isClaiming}
+                        className="bg-green-400 text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-3 px-8 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all text-lg disabled:opacity-50"
                     >
                         PLAY AGAIN
                     </button>
 
                     <button
                         onClick={onGoBack}
-                        className="bg-white text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-3 px-8 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all text-lg"
+                        disabled={isClaiming}
+                        className="bg-white text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-3 px-8 hover:-translate-y-1 hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-y-0 active:shadow-none transition-all text-lg disabled:opacity-50"
                     >
-                        GO BACK
+                        {isClaiming ? 'CLAIMING...' : 'GO BACK'}
                     </button>
                 </div>
             </div>

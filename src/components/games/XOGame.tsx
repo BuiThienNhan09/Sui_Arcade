@@ -17,7 +17,7 @@ import { getAIMove } from '@/lib/xoAI';
 interface XOGameProps {
     config: GameConfig;
     onGameEnd: (result: GameResult) => void;
-    onGoBack: () => void;
+    onGoBack: (result?: GameResult) => void;
 }
 
 export default function XOGame({ config, onGameEnd, onGoBack }: XOGameProps) {
@@ -25,6 +25,7 @@ export default function XOGame({ config, onGameEnd, onGoBack }: XOGameProps) {
     const [isPlayerTurn, setIsPlayerTurn] = useState(true);
     const [gameResult, setGameResult] = useState<GameResult>('ongoing');
     const [isThinking, setIsThinking] = useState(false);
+    const [isClaiming, setIsClaiming] = useState(false);
 
     const playerSymbol: CellValue = 'X';
     const aiSymbol: CellValue = 'O';
@@ -39,7 +40,6 @@ export default function XOGame({ config, onGameEnd, onGoBack }: XOGameProps) {
         if (!isPlayerTurn && gameResult === 'ongoing') {
             setIsThinking(true);
 
-            // Add small delay to make AI feel more natural
             const timer = setTimeout(() => {
                 const aiMove = getAIMove(board, config.winLength, aiSymbol, playerSymbol);
 
@@ -82,11 +82,17 @@ export default function XOGame({ config, onGameEnd, onGoBack }: XOGameProps) {
         }
     };
 
-    // Reset game
+    // Reset game for play again
     const handlePlayAgain = () => {
         setBoard(createBoard(config.size));
         setIsPlayerTurn(true);
         setGameResult('ongoing');
+    };
+
+    // Go back with result claiming
+    const handleGoBack = async () => {
+        setIsClaiming(true);
+        onGoBack(gameResult);
     };
 
     // Get payout based on result
@@ -118,7 +124,8 @@ export default function XOGame({ config, onGameEnd, onGoBack }: XOGameProps) {
                     result={gameResult}
                     payout={getPayout()}
                     onPlayAgain={handlePlayAgain}
-                    onGoBack={onGoBack}
+                    onGoBack={handleGoBack}
+                    isClaiming={isClaiming}
                 />
             )}
         </div>
