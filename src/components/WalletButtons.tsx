@@ -1,11 +1,10 @@
 'use client';
 
-import { ConnectButton, useCurrentAccount, useSuiClient } from '@mysten/dapp-kit';
+import { ConnectButton, useCurrentAccount } from '@mysten/dapp-kit';
 import { useState } from 'react';
 
 export default function WalletButtons() {
     const account = useCurrentAccount();
-    const suiClient = useSuiClient();
     const [isToppingUp, setIsToppingUp] = useState(false);
 
     const handleTopUp = async () => {
@@ -37,8 +36,29 @@ export default function WalletButtons() {
 
     return (
         <div className="flex items-center gap-4">
-            {/* Connect Button - Styled to match pixel aesthetic */}
-            <div className="[&>button]:!bg-white [&>button]:!text-black [&>button]:!border-4 [&>button]:!border-black [&>button]:!shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] [&>button]:!font-['Press_Start_2P'] [&>button]:!rounded-xl [&>button]:!py-3 [&>button]:!px-4 hover:[&>button]:!translate-y-[-2px] active:[&>button]:!translate-y-[0px] active:[&>button]:!shadow-none transition-all">
+            {/* Connect Button Override - White button, black text, black border */}
+            <style jsx global>{`
+        div[data-testid="connect-wallet-button"] > button {
+          background-color: white !important;
+          color: black !important;
+          border: 4px solid black !important;
+          border-radius: 9999px !important; /* Pill shape */
+          font-family: inherit !important;
+          font-weight: bold !important;
+          box-shadow: 4px 4px 0px 0px rgba(0,0,0,1) !important;
+          padding: 10px 20px !important;
+          transition: transform 0.1s !important;
+        }
+        div[data-testid="connect-wallet-button"] > button:hover {
+          transform: translateY(-2px) !important;
+        }
+        div[data-testid="connect-wallet-button"] > button:active {
+          transform: translateY(0) !important;
+          box-shadow: none !important;
+        }
+      `}</style>
+
+            <div data-testid="connect-wallet-button">
                 <ConnectButton />
             </div>
 
@@ -46,7 +66,7 @@ export default function WalletButtons() {
                 <button
                     onClick={handleTopUp}
                     disabled={isToppingUp}
-                    className="bg-green-400 text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-['Press_Start_2P'] rounded-xl py-3 px-4 hover:-translate-y-[2px] active:translate-y-0 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="bg-white text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-2 px-6 hover:-translate-y-[2px] active:translate-y-0 active:shadow-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm whitespace-nowrap"
                 >
                     {isToppingUp ? '...' : 'TOP UP'}
                 </button>

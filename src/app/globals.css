@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #52beff;
+  --background: #5CA6FC;
   --foreground: #ffffff;
+}
+
+/* Pixel Art rendering for crisp edges */
+img {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
 }
 
 body {
@@ -14,26 +21,30 @@ body {
   padding: 0;
 }
 
+
 @layer utilities {
   .text-shadow {
     text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
   }
+
   .text-shadow-lg {
     text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.3);
   }
+
   .pixel-border {
-    box-shadow: 
+    box-shadow:
       -4px 0 0 0 white,
       4px 0 0 0 white,
       0 -4px 0 0 white,
       0 4px 0 0 white;
   }
-  
+
   /* Hide scrollbar for cleaner look if desired, 
      though we want the user to scroll naturally */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -42,8 +53,15 @@ body {
 
 /* Animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 .animate-float {
