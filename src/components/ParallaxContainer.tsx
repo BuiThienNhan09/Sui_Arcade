@@ -1,10 +1,10 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef } from 'react';
 
 interface ParallaxContextType {
     currentSection: number;
-    progress: number; // 0 to 2 (for 3 sections)
+    progress: number;
     scrollToSection: (index: number) => void;
 }
 
@@ -23,36 +23,36 @@ const TOTAL_SECTIONS = 3;
 export default function ParallaxContainer({ children }: { children: ReactNode }) {
     const [currentSection, setCurrentSection] = useState(0);
     const [progress, setProgress] = useState(0);
-    const [isScrolling, setIsScrolling] = useState(false);
+    const lastScrollTime = useRef(0);
+    const scrollCooldown = 600; // ms between scroll actions
 
     const scrollToSection = useCallback((index: number) => {
-        if (index < 0 || index >= TOTAL_SECTIONS || isScrolling) return;
+        if (index < 0 || index >= TOTAL_SECTIONS) return;
 
-        setIsScrolling(true);
+        const now = Date.now();
+        // Allow immediate scroll if enough time has passed
+        if (now - lastScrollTime.current < scrollCooldown && index !== currentSection) {
+            return;
+        }
+
+        lastScrollTime.current = now;
         setCurrentSection(index);
         setProgress(index);
-
-        // Allow scroll again after animation completes
-        setTimeout(() => setIsScrolling(false), 600);
-    }, [isScrolling]);
+    }, [currentSection]);
 
     useEffect(() => {
         let touchStartY = 0;
-        let lastScrollTime = 0;
-        const scrollCooldown = 800; // ms between scroll actions
 
         const handleWheel = (e: WheelEvent) => {
             e.preventDefault();
 
             const now = Date.now();
-            if (now - lastScrollTime < scrollCooldown) return;
+            if (now - lastScrollTime.current < scrollCooldown) return;
 
             if (e.deltaY > 30 && currentSection < TOTAL_SECTIONS - 1) {
                 scrollToSection(currentSection + 1);
-                lastScrollTime = now;
             } else if (e.deltaY < -30 && currentSection > 0) {
                 scrollToSection(currentSection - 1);
-                lastScrollTime = now;
             }
         };
 
@@ -62,30 +62,26 @@ export default function ParallaxContainer({ children }: { children: ReactNode })
 
         const handleTouchEnd = (e: TouchEvent) => {
             const now = Date.now();
-            if (now - lastScrollTime < scrollCooldown) return;
+            if (now - lastScrollTime.current < scrollCooldown) return;
 
             const touchEndY = e.changedTouches[0].clientY;
             const diff = touchStartY - touchEndY;
 
             if (diff > 50 && currentSection < TOTAL_SECTIONS - 1) {
                 scrollToSection(currentSection + 1);
-                lastScrollTime = now;
             } else if (diff < -50 && currentSection > 0) {
                 scrollToSection(currentSection - 1);
-                lastScrollTime = now;
             }
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
             const now = Date.now();
-            if (now - lastScrollTime < scrollCooldown) return;
+            if (now - lastScrollTime.current < scrollCooldown) return;
 
             if ((e.key === 'ArrowDown' || e.key === 'PageDown') && currentSection < TOTAL_SECTIONS - 1) {
                 scrollToSection(currentSection + 1);
-                lastScrollTime = now;
             } else if ((e.key === 'ArrowUp' || e.key === 'PageUp') && currentSection > 0) {
                 scrollToSection(currentSection - 1);
-                lastScrollTime = now;
             }
         };
 

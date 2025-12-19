@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { GameConfig } from '@/config/games';
 
 interface GameCardProps {
@@ -9,8 +10,9 @@ interface GameCardProps {
 }
 
 export default function GameCard({ game, isDesktop = true }: GameCardProps) {
-    // Mobile: much smaller cards to fit all 3 on screen
-    // Desktop: larger cards
+    const router = useRouter();
+
+    // Mobile: smaller cards to fit all 3 on screen
     const cardSize = isDesktop ? 'w-40 h-40 md:w-48 md:h-48' : 'w-20 h-20';
     const labelSize = isDesktop ? 'text-xs md:text-sm px-6 py-2' : 'text-[8px] px-3 py-1';
     const borderWidth = isDesktop ? 'border-4' : 'border-2';
@@ -21,8 +23,16 @@ export default function GameCard({ game, isDesktop = true }: GameCardProps) {
         ? 'shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]'
         : 'shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]';
 
+    const handleClick = () => {
+        // Navigate to game page
+        router.push(`/games/${game.id}`);
+    };
+
     return (
-        <div className="flex flex-col items-center gap-2 group cursor-pointer transition-transform hover:-translate-y-2">
+        <div
+            onClick={handleClick}
+            className="flex flex-col items-center gap-2 group cursor-pointer transition-transform hover:-translate-y-2"
+        >
             {/* Card Container */}
             <div className={`relative ${cardSize} bg-white rounded-2xl ${borderWidth} border-black ${shadowSize} overflow-hidden transition-shadow flex items-center justify-center p-2`}>
                 <Image
