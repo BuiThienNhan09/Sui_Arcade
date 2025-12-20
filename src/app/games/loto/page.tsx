@@ -13,9 +13,6 @@ import {
     DRAW_INTERVAL_MS,
     WIN_MULTIPLIER,
     LotoCard as LotoCardType,
-    generateDrawSequence,
-    checkWinningLines,
-    calculateReward,
     createCardWithFreeSpace,
 } from '@/lib/lotoLogic';
 import { useLotoGame } from '@/hooks/useLotoGame';
@@ -25,7 +22,7 @@ type GamePhase = 'selection' | 'paying' | 'drawing' | 'result';
 export default function LotoGamePage() {
     const router = useRouter();
     const account = useCurrentAccount();
-    const { startGame, claimReward, isLoading } = useLotoGame();
+    const { playGame, isLoading, gameResult, resetGame: resetHook } = useLotoGame();
 
     // Game state
     const [phase, setPhase] = useState<GamePhase>('selection');
@@ -77,37 +74,40 @@ export default function LotoGamePage() {
         setSelectedNumbers(new Set());
     };
 
-    // Start game
+    // Start game - now uses on-chain randomness
     const handleStartGame = async () => {
         if (!account || selectedNumbers.size !== TOTAL_CELLS || !selectedBet) return;
 
         setPhase('paying');
-        const success = await startGame(selectedBet);
 
-        if (success) {
-            // Convert set to card with FREE center
-            setCardNumbers(createCardWithFreeSpace(Array.from(selectedNumbers)));
-            // Generate draw sequence
-            setDrawSequence(generateDrawSequence());
+        // Convert selected numbers to array for contract
+        const cardArray = Array.from(selectedNumbers);
+
+        // Play game on-chain - this generates draw sequence and calculates lines
+        const result = await playGame(cardArray, selectedBet);
+
+        if (result) {
+            // Convert set to card with FREE center for display
+            setCardNumbers(createCardWithFreeSpace(cardArray));
+            // Use draw sequence from on-chain
+            setDrawSequence(result.drawSequence);
             setDrawnNumbers([]);
             setCurrentDrawIndex(0);
             setMatchedNumbers(new Set());
+            // Store result for later
+            setLinesWon(result.linesWon);
+            setReward(result.payout);
             setPhase('drawing');
         } else {
             setPhase('selection');
         }
     };
 
-    // Drawing effect
+    // Drawing effect - animates through on-chain draw sequence
     useEffect(() => {
         if (phase !== 'drawing') return;
-        if (currentDrawIndex >= TOTAL_DRAWS) {
-            // Drawing complete - calculate results
-            const drawnSet = new Set(drawnNumbers);
-            const lines = checkWinningLines(cardNumbers, drawnSet);
-            const rewardAmount = calculateReward(selectedBet || 0, lines);
-            setLinesWon(lines);
-            setReward(rewardAmount);
+        if (currentDrawIndex >= drawSequence.length || currentDrawIndex >= TOTAL_DRAWS) {
+            // Drawing animation complete - show result (already calculated on-chain)
             setPhase('result');
             return;
         }
@@ -125,16 +125,15 @@ export default function LotoGamePage() {
         }, DRAW_INTERVAL_MS);
 
         return () => clearTimeout(timer);
-    }, [phase, currentDrawIndex, drawSequence, selectedNumbers, cardNumbers, selectedBet, drawnNumbers]);
+    }, [phase, currentDrawIndex, drawSequence, selectedNumbers]);
 
-    // Claim and close
+    // Close and play again - payout already happened on-chain
     const handleClaimAndClose = async () => {
-        await claimReward(linesWon);
-        resetGame();
+        resetGameState();
     };
 
-    // Reset game
-    const resetGame = () => {
+    // Reset game state
+    const resetGameState = () => {
         setPhase('selection');
         setSelectedNumbers(new Set());
         setCardNumbers([]);
@@ -145,6 +144,7 @@ export default function LotoGamePage() {
         setMatchedNumbers(new Set());
         setLinesWon(0);
         setReward(0);
+        resetHook();
     };
 
     const handleReturnHome = () => {

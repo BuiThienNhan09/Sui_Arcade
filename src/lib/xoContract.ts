@@ -4,14 +4,14 @@
  */
 
 export const XO_CONTRACT = {
-    // Package ID - deployed to testnet
-    PACKAGE_ID: '0x996ab21e6cb20bbcb4fdec78c1514c05d03245a6d294837994aeb122c824be6b',
+    // Package ID - updated deployment
+    PACKAGE_ID: '0xede5653adb7eae30e2f9336eef4993855284762aa99930dad93b5fb434f450ff',
 
     // Module name
     MODULE: 'xo_game',
 
     // GamePool shared object ID
-    GAME_POOL_ID: '0xfc3caa1af2a33cbd9553311652ece4f5776f17ea1b6debbf6d7f921b354f1f13',
+    GAME_POOL_ID: '0xe39549eabc2d229c436e2717687912de4733e06d36d631fc8f86d7099be189aa',
 
     // Entry fees in MIST (1 SUI = 1_000_000_000 MIST)
     ENTRY_FEES: {

@@ -5,9 +5,11 @@ import { Transaction } from '@mysten/sui/transactions';
 import { useSignAndExecuteTransaction, useSuiClient, useCurrentAccount } from '@mysten/dapp-kit';
 import { LOTO_CONTRACT, getBetInMist } from '@/lib/lotoContract';
 
-interface LotoSession {
-    sessionId: string;
-    betAmount: number;
+interface GameResult {
+    linesWon: number;
+    payout: number;
+    drawSequence: number[];
+    txDigest: string;
 }
 
 export function useLotoGame() {
@@ -17,39 +19,48 @@ export function useLotoGame() {
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [currentSession, setCurrentSession] = useState<LotoSession | null>(null);
+    const [gameResult, setGameResult] = useState<GameResult | null>(null);
 
     /**
-     * Start a new game by paying bet amount
+     * Play a complete game with on-chain randomness
+     * cardNumbers: array of 24 numbers (1-75) the player selected
+     * betAmount: SUI amount to bet
      */
-    const startGame = useCallback(async (betAmount: number): Promise<boolean> => {
+    const playGame = useCallback(async (cardNumbers: number[], betAmount: number): Promise<GameResult | null> => {
         if (!account) {
             setError('Wallet not connected');
-            return false;
+            return null;
+        }
+
+        if (cardNumbers.length !== 24) {
+            setError('Card must have exactly 24 numbers');
+            return null;
         }
 
         setIsLoading(true);
         setError(null);
+        setGameResult(null);
 
         try {
             const betMist = getBetInMist(betAmount);
-
             const tx = new Transaction();
 
             // Split coin for bet
             const [coin] = tx.splitCoins(tx.gas, [betMist]);
 
-            // Call start_game
-            const [session] = tx.moveCall({
-                target: `${LOTO_CONTRACT.PACKAGE_ID}::${LOTO_CONTRACT.MODULE}::start_game`,
+            // Convert card numbers to u8 array for Move
+            const cardNumbersU8 = cardNumbers.map(n => Math.min(75, Math.max(1, Math.floor(n))));
+
+            // Call play_game with on-chain random
+            tx.moveCall({
+                target: `${LOTO_CONTRACT.PACKAGE_ID}::${LOTO_CONTRACT.MODULE}::play_game`,
                 arguments: [
                     tx.object(LOTO_CONTRACT.LOTO_POOL_ID),
                     coin,
+                    tx.pure.vector('u8', cardNumbersU8),
+                    tx.object(LOTO_CONTRACT.RANDOM_OBJECT_ID),
                 ],
             });
-
-            // Transfer session to player
-            tx.transferObjects([session], account.address);
 
             const result = await signAndExecute({
                 transaction: tx,
@@ -57,82 +68,60 @@ export function useLotoGame() {
 
             await suiClient.waitForTransaction({ digest: result.digest });
 
-            // Find created session
-            const txResult = await suiClient.getTransactionBlock({
+            // Get transaction details to read the GamePlayed event
+            const txDetails = await suiClient.getTransactionBlock({
                 digest: result.digest,
-                options: { showObjectChanges: true },
+                options: { showEvents: true },
             });
 
-            const sessionObj = txResult.objectChanges?.find(
-                (change) =>
-                    change.type === 'created' &&
-                    change.objectType?.includes('LotoSession')
+            // Parse GamePlayed event
+            const gameEvent = txDetails.events?.find(
+                (e) => e.type.includes('GamePlayed')
             );
 
-            if (sessionObj && sessionObj.type === 'created') {
-                setCurrentSession({
-                    sessionId: sessionObj.objectId,
-                    betAmount,
-                });
+            let linesWon = 0;
+            let payout = 0;
+            let drawSequence: number[] = [];
+
+            if (gameEvent && gameEvent.parsedJson) {
+                const eventData = gameEvent.parsedJson as {
+                    lines_won: string;
+                    payout: string;
+                    draw_sequence: number[];
+                };
+                linesWon = parseInt(eventData.lines_won);
+                payout = parseInt(eventData.payout) / 1_000_000_000; // Convert MIST to SUI
+                drawSequence = eventData.draw_sequence || [];
             }
 
+            const gameResultData: GameResult = {
+                linesWon,
+                payout,
+                drawSequence,
+                txDigest: result.digest,
+            };
+
+            setGameResult(gameResultData);
             setIsLoading(false);
-            return true;
+            return gameResultData;
         } catch (err) {
-            console.error('Failed to start game:', err);
-            setError(err instanceof Error ? err.message : 'Failed to start game');
+            console.error('Failed to play game:', err);
+            setError(err instanceof Error ? err.message : 'Failed to play game');
             setIsLoading(false);
-            return false;
+            return null;
         }
     }, [account, signAndExecute, suiClient]);
 
-    /**
-     * Claim reward based on lines won
-     */
-    const claimReward = useCallback(async (linesWon: number): Promise<boolean> => {
-        if (!account || !currentSession) {
-            setError('No active session');
-            return false;
-        }
-
-        setIsLoading(true);
+    const resetGame = useCallback(() => {
+        setGameResult(null);
         setError(null);
-
-        try {
-            const tx = new Transaction();
-
-            tx.moveCall({
-                target: `${LOTO_CONTRACT.PACKAGE_ID}::${LOTO_CONTRACT.MODULE}::claim_reward`,
-                arguments: [
-                    tx.object(LOTO_CONTRACT.LOTO_POOL_ID),
-                    tx.object(currentSession.sessionId),
-                    tx.pure.u64(linesWon),
-                ],
-            });
-
-            const result = await signAndExecute({
-                transaction: tx,
-            });
-
-            await suiClient.waitForTransaction({ digest: result.digest });
-
-            setCurrentSession(null);
-            setIsLoading(false);
-            return true;
-        } catch (err) {
-            console.error('Failed to claim reward:', err);
-            setError(err instanceof Error ? err.message : 'Failed to claim');
-            setIsLoading(false);
-            return false;
-        }
-    }, [account, currentSession, signAndExecute, suiClient]);
+    }, []);
 
     return {
-        startGame,
-        claimReward,
+        playGame,
+        resetGame,
         isLoading,
         error,
-        currentSession,
-        hasActiveSession: !!currentSession,
+        gameResult,
     };
 }

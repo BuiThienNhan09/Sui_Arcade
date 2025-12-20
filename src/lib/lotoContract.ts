@@ -1,17 +1,20 @@
 /**
  * Loto Game Contract Configuration
- * Deployed to Sui Testnet
+ * Deployed to Sui Testnet with on-chain randomness
  */
 
 export const LOTO_CONTRACT = {
-    // Package ID
-    PACKAGE_ID: '0xd745044eca660ab1a59936e1e01d3b25e8e147303d62b4aef70d5589f9645029',
+    // Package ID - NEW deployment with sui::random
+    PACKAGE_ID: '0xede5653adb7eae30e2f9336eef4993855284762aa99930dad93b5fb434f450ff',
 
     // Module name
     MODULE: 'loto_game',
 
     // LotoPool shared object ID
-    LOTO_POOL_ID: '0xd02b9330e50d03493ec5b916c77e1a33ea3476da53fb1521ef34a209c610062e',
+    LOTO_POOL_ID: '0x54621e9bd0ebe8d2d2ec54ca4457ad59daf0640f78eeb3607df9c92b50bec9d7',
+
+    // Sui's on-chain random object
+    RANDOM_OBJECT_ID: '0x8',
 
     // Valid bet amounts in MIST
     BET_AMOUNTS: {

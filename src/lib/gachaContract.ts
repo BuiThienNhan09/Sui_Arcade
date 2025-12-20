@@ -1,12 +1,12 @@
 /**
  * Gacha/Lucky Chests Game Contract Configuration
- * Deployed to Sui Testnet
+ * Deployed to Sui Testnet with on-chain randomness
  */
 
 export const GACHA_CONTRACT = {
-    PACKAGE_ID: '0xc7a6c71b3712ca378c13b0d4fe7a8c0b64d759a3bee772ef6d8646c95dce3872',
+    PACKAGE_ID: '0xede5653adb7eae30e2f9336eef4993855284762aa99930dad93b5fb434f450ff',
     MODULE: 'gacha',
-    TREASURY_ID: '0xe2f01f4ebaa1a397cc5a9e5754b7bc6f135792a7130d9b65f5c7cb6b9a6d2dde',
+    TREASURY_ID: '0x818e7473ba972a37ab44dfe4b5fbf79622bcc561cbbc287194ece4448fe40a5d',
     RANDOM_OBJECT_ID: '0x8', // Sui's on-chain random object
 };
 
