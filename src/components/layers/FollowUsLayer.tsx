@@ -59,7 +59,7 @@ export default function FollowUsLayer() {
 
             {/* Contact Info Box - Bottom Right on desktop/tablet, higher on mobile */}
             <div
-                className="absolute right-3 sm:right-[21.5%] lg:right-[3%] bottom-[24%] sm:bottom-[5%]"
+                className="absolute right-3 sm:right-[21.5%] lg:right-[3%] bottom-[23%] sm:bottom-[5%]"
                 style={{ zIndex: 50 }}
             >
                 <ContactInfo />
