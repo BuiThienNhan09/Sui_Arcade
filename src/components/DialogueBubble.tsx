@@ -23,7 +23,7 @@ export default function DialogueBubble({ isVisible }: DialogueBubbleProps) {
         // Dialogue bubble appears above and slightly left of the cat
         <div
             className={`absolute bg-white border-4 border-black p-3 rounded-2xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-center transition-all duration-500 ease-out origin-bottom ${show ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 scale-90'}`}
-            style={{ bottom: '18vw', right: '8%', width: '180px', zIndex: 50 }}
+            style={{ bottom: '20vw', right: '10%', width: '160px', zIndex: 50 }}
         >
             <p className="text-black text-[10px] font-bold leading-relaxed">
                 Did you enjoy our arcade?

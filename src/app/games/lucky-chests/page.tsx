@@ -227,7 +227,7 @@ export default function LuckyChestsPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto"
+                        className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto"
                     >
                         {CHESTS.map((chest, index) => (
                             <motion.div
@@ -236,9 +236,9 @@ export default function LuckyChestsPage() {
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: index * 0.15 }}
                                 onClick={() => handleBuyChest(chest)}
-                                className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-xl p-6 text-center cursor-pointer transition-all duration-150 hover:-translate-y-2 hover:scale-[1.03] hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)]"
+                                className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] rounded-xl p-6 text-center cursor-pointer transition-all duration-150 hover:-translate-y-2 hover:scale-[1.03] hover:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] min-w-[280px]"
                             >
-                                <h2 className="text-lg font-bold text-black mb-4">{chest.name}</h2>
+                                <h2 className="text-lg font-bold text-black mb-4 whitespace-nowrap">{chest.name}</h2>
 
                                 <div className="flex justify-center mb-4">
                                     <ChestIcon id={chest.id} />

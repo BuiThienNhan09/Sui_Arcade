@@ -135,9 +135,9 @@ export default function XOGamePage() {
     // Size selection screen
     if (gameState === 'select') {
         return (
-            <div className="min-h-screen bg-[#5CA6FC] flex flex-col items-center justify-center p-4">
+            <div className="min-h-screen bg-[#5CA6FC] p-4">
                 {/* Header */}
-                <div className="absolute top-4 left-4">
+                <div className="absolute top-4 left-4 z-20">
                     <button
                         onClick={handleReturnHome}
                         className="bg-white text-black border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] font-bold rounded-full py-2 px-6 hover:-translate-y-1 active:translate-y-0 active:shadow-none transition-all text-sm"
@@ -146,72 +146,73 @@ export default function XOGamePage() {
                     </button>
                 </div>
 
-                {/* Title */}
-                <h1
-                    className="text-4xl md:text-6xl text-white font-bold mb-12 text-center"
-                    style={{ textShadow: '4px 4px 0px rgba(0,0,0,0.25)' }}
-                >
-                    XO GAME
-                </h1>
+                <div className="flex flex-col items-center justify-center min-h-screen pt-16">
+                    <h1
+                        className="text-4xl md:text-6xl text-white font-bold mb-12 text-center"
+                        style={{ textShadow: '4px 4px 0px rgba(0,0,0,0.25)' }}
+                    >
+                        XO GAME
+                    </h1>
 
-                {/* Wallet Warning */}
-                {!account && (
-                    <div className="bg-yellow-400 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-6 py-3 rounded-xl mb-8">
-                        <p className="text-black font-bold text-sm text-center">
-                            ⚠️ Connect your wallet to play!
-                        </p>
-                    </div>
-                )}
+                    {/* Wallet Warning */}
+                    {!account && (
+                        <div className="bg-yellow-400 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] px-6 py-3 rounded-xl mb-8">
+                            <p className="text-black font-bold text-sm text-center">
+                                ⚠️ Connect your wallet to play!
+                            </p>
+                        </div>
+                    )}
 
-                {/* Size Selection Cards */}
-                <div className="flex flex-wrap justify-center gap-6 max-w-4xl">
-                    {Object.entries(GAME_CONFIGS).map(([sizeStr, config]) => {
-                        const size = parseInt(sizeStr);
-                        return (
-                            <button
-                                key={size}
-                                onClick={() => handleSelectSize(size)}
-                                disabled={!account || isLoading}
-                                className={`
+                    {/* Size Selection Cards */}
+                    <div className="flex flex-wrap justify-center gap-6 max-w-4xl">
+                        {Object.entries(GAME_CONFIGS).map(([sizeStr, config]) => {
+                            const size = parseInt(sizeStr);
+                            return (
+                                <button
+                                    key={size}
+                                    onClick={() => handleSelectSize(size)}
+                                    disabled={!account || isLoading}
+                                    className={`
                   bg-white border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]
                   rounded-2xl p-6 w-64
                   transition-all
                   ${account && !isLoading ? 'hover:-translate-y-2 hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] cursor-pointer' : 'opacity-50 cursor-not-allowed'}
                 `}
-                            >
-                                <h2 className="text-3xl font-bold text-black mb-4">
-                                    {size}x{size}
-                                </h2>
+                                >
+                                    <h2 className="text-3xl font-bold text-black mb-4">
+                                        {size}x{size}
+                                    </h2>
 
-                                <p className="text-sm text-gray-600 mb-4">
-                                    {config.winLength} in a row to win
-                                </p>
+                                    <p className="text-sm text-gray-600 mb-4">
+                                        {config.winLength} in a row to win
+                                    </p>
 
-                                <div className="space-y-2 text-left">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-600">Entry:</span>
-                                        <span className="text-black font-bold">{config.entryCost} SUI</span>
+                                    <div className="space-y-2 text-left">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-600">Entry:</span>
+                                            <span className="text-black font-bold">{config.entryCost} SUI</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-green-600">Win:</span>
+                                            <span className="text-green-600 font-bold">+{config.winPayout} SUI</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-yellow-600">Tie:</span>
+                                            <span className="text-yellow-600 font-bold">+{config.tiePayout} SUI</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-red-600">Lose:</span>
+                                            <span className="text-red-600 font-bold">-{config.entryCost} SUI</span>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-green-600">Win:</span>
-                                        <span className="text-green-600 font-bold">+{config.winPayout} SUI</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-yellow-600">Tie:</span>
-                                        <span className="text-yellow-600 font-bold">+{config.tiePayout} SUI</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-red-600">Lose:</span>
-                                        <span className="text-red-600 font-bold">-{config.entryCost} SUI</span>
-                                    </div>
-                                </div>
 
-                                <div className="mt-6 bg-green-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-full py-2 text-black font-bold">
-                                    PLAY
-                                </div>
-                            </button>
-                        );
-                    })}
+                                    <div className="mt-6 bg-green-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-full py-2 text-black font-bold">
+                                        PLAY
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
         );
